@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EmissionsTrack — Data Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2L3 7v11h5v-5h4v5h5V7L10 2z" fill="currentColor" opacity="0.9"/>
+        </svg>
+      </div>
+      <span class="logo-text">EmissionsTrack</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Data</div>
+      <button class="nav-item active" onclick="switchTab('import', this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Import
+      </button>
+      <button class="nav-item" onclick="switchTab('data', this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        Data Table
+        <span class="nav-badge" id="navCount">0</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('export', this)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        Export
+      </button>
+
+      <div class="nav-section-label" style="margin-top:1.5rem">Status</div>
+      <div class="sidebar-status">
+        <div class="status-dot" id="sidebarDot"></div>
+        <span id="sidebarStatus">No data loaded</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-text">v1.0.0 &nbsp;·&nbsp; Compliance Ready</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- IMPORT PANEL -->
+    <div class="panel active" id="panel-import">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Import Data</h1>
+          <p class="page-subtitle">Upload a CSV or Excel file to load emissions records</p>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <div class="dz-inner">
+          <div class="dz-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+          </div>
+          <p class="dz-title">Drop your file here</p>
+          <p class="dz-sub">or <span class="dz-link">click to browse</span> &nbsp;·&nbsp; .csv, .xlsx, .xls</p>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" onchange="handleFile(this.files[0])">
+
+      <div class="preview-card" id="importPreview">
+        <div class="preview-header">
+          <div class="preview-header-left">
+            <div class="preview-file-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <span id="previewLabel">preview</span>
+          </div>
+          <div class="preview-actions">
+            <button class="btn btn-primary" onclick="confirmImport()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Confirm import
+            </button>
+            <button class="btn btn-ghost" onclick="clearImport()">Discard</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table" id="previewTable"></table>
+        </div>
+      </div>
+
+      <div class="sample-section">
+        <p class="section-label">Don't have a file?</p>
+        <button class="btn btn-outline" onclick="loadSample()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Load sample emissions dataset
+        </button>
+      </div>
+    </div>
+
+    <!-- DATA TABLE PANEL -->
+    <div class="panel" id="panel-data">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Data Table</h1>
+          <p class="page-subtitle">View, search and edit emissions records</p>
+        </div>
+        <button class="btn btn-primary" onclick="addRow()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add row
+        </button>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-blue">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Total Records</div>
+            <div class="kpi-value" id="stat-total">0</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20M4 20V10l8-8 8 8v10"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg CO₂ (ppm)</div>
+            <div class="kpi-value" id="stat-co2">—</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-amber">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg NOₓ (ppm)</div>
+            <div class="kpi-value" id="stat-nox">—</div>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon kpi-purple">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10A15.3 15.3 0 018 12 15.3 15.3 0 0112 2z"/></svg>
+          </div>
+          <div class="kpi-body">
+            <div class="kpi-label">Active Sites</div>
+            <div class="kpi-value" id="stat-sites">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-input" type="text" id="searchInput" placeholder="Search records…" oninput="renderTable()">
+        </div>
+        <select class="filter-select" id="statusFilter" onchange="renderTable()">
+          <option value="">All statuses</option>
+          <option value="Normal">Normal</option>
+          <option value="Warning">Warning</option>
+          <option value="Critical">Critical</option>
+        </select>
+      </div>
+
+      <div class="table-card">
+        <div class="table-scroll">
+          <table class="data-table" id="dataTable">
+            <thead id="dataHead"></thead>
+            <tbody id="dataBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT PANEL -->
+    <div class="panel" id="panel-export">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Export Data</h1>
+          <p class="page-subtitle">Download your emissions records as CSV or Excel</p>
+        </div>
+      </div>
+
+      <div class="export-layout">
+        <div class="export-left">
+          <p class="section-label">File format</p>
+          <div class="format-grid">
+            <div class="format-card selected" id="fmt-csv" onclick="selectFmt('csv')">
+              <div class="format-ext csv">.CSV</div>
+              <div class="format-body">
+                <h3>CSV File</h3>
+                <p>Universal comma-separated format, compatible with all tools.</p>
+              </div>
+              <div class="format-check" id="check-csv">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <div class="format-card" id="fmt-xlsx" onclick="selectFmt('xlsx')">
+              <div class="format-ext xlsx">.XLSX</div>
+              <div class="format-body">
+                <h3>Excel Workbook</h3>
+                <p>Microsoft Excel format with column headers.</p>
+              </div>
+              <div class="format-check" id="check-xlsx" style="opacity:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <p class="section-label">Filter records</p>
+          <div class="filter-pills">
+            <button class="pill active" id="pill-all" onclick="setExpFilter('all', this)">All records</button>
+            <button class="pill" id="pill-Normal" onclick="setExpFilter('Normal', this)">Normal</button>
+            <button class="pill" id="pill-Warning" onclick="setExpFilter('Warning', this)">Warning</button>
+            <button class="pill" id="pill-Critical" onclick="setExpFilter('Critical', this)">Critical</button>
+          </div>
+
+          <div class="export-action-row">
+            <button class="btn btn-primary btn-lg" onclick="doExport()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Download file
+            </button>
+            <span class="export-meta" id="exportInfo"></span>
+          </div>
+        </div>
+
+        <div class="export-right">
+          <p class="section-label">Columns to include</p>
+          <div class="col-list" id="colChecklist"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
