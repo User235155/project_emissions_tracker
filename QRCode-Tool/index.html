@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile QR Code — Energy & Fuel Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --primary: #3b5bdb;
+      --primary-dark: #2f4ac4;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --amber-bg: #fffbeb;
+      --amber-border: #fde68a;
+      --amber-text: #92400e;
+      --green-bg: #f0fdf4;
+      --green-border: #86efac;
+      --green-text: #166534;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .logo-icon {
+      height: 40px;
+      width: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e3a8a, #3b5bdb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(59,91,219,0.35);
+    }
+
+    .logo-text h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .logo-text p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      outline: none;
+      transition: border-color 0.15s;
+      background: #f8fafc;
+    }
+
+    input[type="text"]:focus { border-color: var(--primary); background: white; }
+
+    button {
+      padding: 10px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: var(--primary-dark); }
+
+    .qr-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      min-height: 220px;
+    }
+
+    #qrcode canvas, #qrcode img {
+      display: block;
+    }
+
+    .placeholder {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .placeholder svg {
+      margin: 0 auto 10px;
+      opacity: 0.25;
+    }
+
+    .notice {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .notice.amber {
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      color: var(--amber-text);
+    }
+
+    .notice.green {
+      background: var(--green-bg);
+      border: 1px solid var(--green-border);
+      color: var(--green-text);
+    }
+
+    .notice svg { flex-shrink: 0; margin-top: 1px; }
+
+    .notice strong { font-weight: 700; display: block; margin-bottom: 2px; }
+
+    .steps {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+
+    .steps h3 {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .step {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .step-num {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    code {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1>Energy & Fuel Tracker</h1>
+        <p>Mobile QR Code Generator</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <label for="urlInput">Website URL</label>
+    <div class="input-row">
+      <input type="text" id="urlInput" placeholder="http://192.168.x.x:8080" />
+      <button onclick="generateQR()">Generate</button>
+    </div>
+
+    <div class="qr-wrapper">
+      <div id="qrcode">
+        <div class="placeholder">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="3" height="3" rx="0.5"/><rect x="18" y="14" width="3" height="3" rx="0.5"/>
+            <rect x="14" y="18" width="3" height="3" rx="0.5"/><rect x="18" y="18" width="3" height="3" rx="0.5"/>
+          </svg>
+          <p>Enter your network URL above<br>and click Generate</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="notice amber" id="localhostWarning" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div>
+        <strong>localhost won't work on your phone</strong>
+        Your phone needs your computer's network IP. Check your terminal for the <code>Network:</code> line from Vite and use that address.
+      </div>
+    </div>
+
+    <div class="notice green" id="successNotice" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <div>
+        <strong>QR code ready!</strong>
+        Scan with your phone camera — it will open directly to the data entry page.
+      </div>
+    </div>
+
+    <div class="steps">
+      <h3>How to use</h3>
+      <div class="step">
+        <div class="step-num">1</div>
+        <span>Run <code>npm run dev</code> in your project terminal</span>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <span>Find the <code>Network: http://192.168.x.x:8080</code> line in the terminal output</span>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <span>Paste that URL above and click <strong>Generate</strong></span>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <span>Make sure your phone is on the same Wi-Fi, then scan the QR code</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function generateQR() {
+      const url = document.getElementById('urlInput').value.trim();
+      if (!url) return;
+
+      const isLocalhost = url.includes('localhost') || url.includes('127.0.0.1');
+      document.getElementById('localhostWarning').style.display = isLocalhost ? 'flex' : 'none';
+      document.getElementById('successNotice').style.display = isLocalhost ? 'none' : 'flex';
+
+      const container = document.getElementById('qrcode');
+      container.innerHTML = '';
+
+      new QRCode(container, {
+        text: url,
+        width: 180,
+        height: 180,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M,
+      });
+    }
+
+    // Allow pressing Enter in the input
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') generateQR();
+    });
+  </script>
+
+</body>
+</html>
