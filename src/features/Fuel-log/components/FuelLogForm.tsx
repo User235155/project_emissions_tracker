@@ -82,7 +82,7 @@ export function FuelLogForm({
     if (!selectedAssetConfig) return
 
     const newRecord: FuelRecord = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2) + Date.now().toString(36),
       asset: selectedAssetConfig.asset,
       assetType: selectedAssetConfig.assetType,
       fuelType: selectedAssetConfig.fuelType,
