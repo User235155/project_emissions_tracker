@@ -141,7 +141,7 @@ export function ImportSpreadsheetCard({
           const date = makeRepresentativeDate(2025, monthIndex, weekNumber)
 
           imported.push({
-            id: crypto.randomUUID(),
+            id: Math.random().toString(36).substring(2) + Date.now().toString(36),
             asset: assetConfig.asset,
             assetType: assetConfig.assetType,
             fuelType: assetConfig.fuelType,
